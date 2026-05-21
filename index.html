@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador Pack Difusio ATL Seleccio</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f4f5f0;color:#1a1a1a;min-height:100vh}
+.header{background:#fff;border-bottom:1px solid #e0e0e0;padding:18px 32px;display:flex;align-items:center;gap:14px}
+.logo{width:42px;height:42px;background:#e1f5ee;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px}
+.header h1{font-size:17px;font-weight:700;color:#1a1a1a}
+.header p{font-size:12px;color:#777;margin-top:2px}
+.main{max-width:740px;margin:28px auto;padding:0 20px 60px}
+.info-bar{background:#e1f5ee;border:1px solid #5dcaa5;border-radius:8px;padding:11px 16px;font-size:13px;color:#085041;margin-bottom:18px;line-height:1.6}
+.warn-bar{background:#fff8e1;border:1px solid #f0c040;border-radius:8px;padding:11px 16px;font-size:13px;color:#7a5500;margin-bottom:12px;line-height:1.6}
+.card{background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:22px;margin-bottom:14px}
+.card-title{font-size:11px;font-weight:700;color:#777;text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px}
+label{font-size:12px;font-weight:700;color:#444;display:block;margin-bottom:4px}
+input[type=text],input[type=password],select,textarea{width:100%;border:1px solid #ddd;border-radius:6px;padding:9px 12px;font-size:14px;color:#1a1a1a;background:#fff;font-family:Arial,sans-serif;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#0f6e56;box-shadow:0 0 0 2px rgba(15,110,86,.1)}
+.api-row{display:flex;gap:8px;align-items:flex-end}
+.api-row input{flex:1}
+.btn-small{background:none;border:1px solid #ddd;border-radius:6px;padding:9px 12px;cursor:pointer;font-size:12px;color:#666;white-space:nowrap;font-family:Arial,sans-serif}
+.btn-small:hover{background:#f5f5f3}
+.btn-green{background:#0f6e56;color:#fff;border-color:#0f6e56}
+.api-saved{font-size:11px;color:#0f6e56;margin-top:4px;display:none}
+.drop{border:2px dashed #ccc;border-radius:8px;padding:28px;text-align:center;cursor:pointer;background:#fafaf8;transition:all .15s}
+.drop:hover{border-color:#0f6e56;background:#e1f5ee}
+.drop-icon{font-size:28px;margin-bottom:8px}
+.drop p{font-size:13px;color:#666}
+.drop small{font-size:11px;color:#aaa;display:block;margin-top:4px}
+.file-ok{display:inline-flex;align-items:center;gap:6px;background:#e1f5ee;border:1px solid #5dcaa5;border-radius:20px;padding:4px 12px;font-size:12px;color:#085041;margin-top:10px}
+.file-err{display:inline-flex;align-items:center;gap:6px;background:#fce8e8;border:1px solid #f0a0a0;border-radius:20px;padding:4px 12px;font-size:12px;color:#7a1a1a;margin-top:10px}
+.btn-gen{width:100%;background:#0f6e56;color:#fff;border:none;border-radius:8px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s;margin-top:4px}
+.btn-gen:hover{opacity:.88}
+.btn-gen:disabled{opacity:.4;cursor:not-allowed}
+.steps{display:none;margin-top:16px;background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:16px 20px}
+.steps.show{display:block}
+.step-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #f5f5f3;font-size:13px;color:#444}
+.step-row:last-child{border:none}
+.dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;background:#f0f0f0;color:#bbb}
+.dot.run{background:#fff3cd;color:#7a4500}
+.dot.ok{background:#e1f5ee;color:#085041}
+.dot.err{background:#fce8e8;color:#8a1a1a}
+.result-box{display:none;margin-top:16px;background:#fff;border:1px solid #e0e0e0;border-radius:10px;overflow:hidden}
+.result-box.show{display:block}
+.result-header{padding:14px 20px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;background:#f8faf8}
+.result-title{font-size:14px;font-weight:700;color:#1a1a1a}
+.dl-btn{background:#0f6e56;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.dl-btn:hover{opacity:.88}
+.dl-btn.gray{background:#ddd;color:#999;pointer-events:none}
+.tabs{display:flex;background:#f4f5f0;overflow-x:auto;border-bottom:1px solid #e0e0e0}
+.tab{flex-shrink:0;padding:10px 16px;font-size:12px;font-weight:700;color:#888;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;font-family:Arial,sans-serif;white-space:nowrap}
+.tab.on{color:#0f6e56;border-bottom-color:#0f6e56;background:#fff}
+.panels{padding:18px 20px}
+.panel{display:none;max-height:400px;overflow-y:auto}
+.panel.on{display:block}
+.panel pre{white-space:pre-wrap;font-size:13px;line-height:1.75;color:#1a1a1a;font-family:Arial,sans-serif}
+.copy-btn{font-size:12px;color:#777;background:none;border:1px solid #ddd;border-radius:6px;padding:4px 12px;cursor:pointer;margin-bottom:10px;font-family:Arial,sans-serif}
+.copy-btn:hover{background:#f5f5f3;color:#1a1a1a}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo"></div>
+  <div>
+    <h1>Generador de Pack de Difusio · ATL Seleccio</h1>
+    <p>Nom del lloc + codi + perfil + document = pack complet llest per publicar</p>
+  </div>
+  <button onclick="document.getElementById('helpModal').style.display='flex'" style="background:#e1f5ee;border:1px solid #5dcaa5;color:#0f6e56;border-radius:50%;width:36px;height:36px;font-size:18px;font-weight:bold;cursor:pointer;flex-shrink:0;font-family:Arial,sans-serif">?</button>
+</div>
+
+<div id="helpModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:#fff;border-radius:12px;padding:32px;max-width:620px;width:90%;max-height:85vh;overflow-y:auto;position:relative">
+    <button onclick="document.getElementById('helpModal').style.display='none'" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:#666">x</button>
+    <h2 style="font-size:18px;font-weight:700;color:#0f6e56;margin:0 0 6px">Com utilitzar l'eina</h2>
+    <p style="font-size:13px;color:#666;margin:0 0 20px;border-bottom:1px solid #eee;padding-bottom:16px">Generador de Pack de Difusio - ATL Seleccio</p>
+    <h3 style="font-size:13px;font-weight:700;color:#1a1a1a;margin:0 0 8px">Primera vegada</h3>
+    <ol style="font-size:13px;color:#444;line-height:1.8;margin:0 0 20px;padding-left:20px">
+      <li>Enganxa la clau d'API que et faciliti el responsable de l'equip</li>
+      <li>Clica <strong>Desar</strong> - es guardara al navegador i no caldra tornar-la a introduir</li>
+    </ol>
+    <h3 style="font-size:13px;font-weight:700;color:#1a1a1a;margin:0 0 8px">Cada vegada que generis un pack</h3>
+    <ol style="font-size:13px;color:#444;line-height:1.8;margin:0 0 20px;padding-left:20px">
+      <li>Escriu el <strong>nom exacte del lloc</strong></li>
+      <li>Introdueix el <strong>codi d'oferta</strong> (ex: ATL001-26)</li>
+      <li>Selecciona el <strong>tipus de perfil</strong></li>
+      <li>Adjunta la <strong>DPT o oferta ATRI</strong> (.docx, .pdf o .txt) o enganxa el text manualment</li>
+      <li>Clica <strong>Generar pack</strong> i espera 30-60 segons</li>
+      <li>Quan acabi, clica <strong>Imprimir / Desar PDF</strong> i selecciona "Desar com a PDF"</li>
+    </ol>
+    <h3 style="font-size:13px;font-weight:700;color:#1a1a1a;margin:0 0 8px">Contingut del pack</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;margin:0 0 20px">
+      <tr style="background:#e1f5ee"><td style="padding:6px 10px;font-weight:700;color:#0f6e56;border:1px solid #c5e8dc">A</td><td style="padding:6px 10px;border:1px solid #c5e8dc">Fitxa executiva per a Seleccio</td></tr>
+      <tr><td style="padding:6px 10px;font-weight:700;color:#0f6e56;border:1px solid #e0e0e0">B</td><td style="padding:6px 10px;border:1px solid #e0e0e0">Versio ATRI / canal formal</td></tr>
+      <tr style="background:#f8f8f8"><td style="padding:6px 10px;font-weight:700;color:#0f6e56;border:1px solid #e0e0e0">C</td><td style="padding:6px 10px;border:1px solid #e0e0e0">Versio LinkedIn</td></tr>
+      <tr><td style="padding:6px 10px;font-weight:700;color:#0f6e56;border:1px solid #e0e0e0">D</td><td style="padding:6px 10px;border:1px solid #e0e0e0">Versio portals de feina (InfoJobs, Indeed, Feina.cat)</td></tr>
+      <tr style="background:#f8f8f8"><td style="padding:6px 10px;font-weight:700;color:#0f6e56;border:1px solid #e0e0e0">E</td><td style="padding:6px 10px;border:1px solid #e0e0e0">Pack centres FP / talent jove</td></tr>
+      <tr><td style="padding:6px 10px;font-weight:700;color:#0f6e56;border:1px solid #e0e0e0">F</td><td style="padding:6px 10px;border:1px solid #e0e0e0">Pla tancat d'activacio de canals</td></tr>
+    </table>
+    <h3 style="font-size:13px;font-weight:700;color:#1a1a1a;margin:0 0 8px">Notes importants</h3>
+    <ul style="font-size:13px;color:#444;line-height:1.8;margin:0 0 20px;padding-left:20px">
+      <li>Els textos estan <strong>llestos per publicar</strong></li>
+      <li>El canal d'inscripcio sempre es <strong>www.atl.cat</strong></li>
+      <li>No s'inventan salaris, beneficis ni condicions no publicades</li>
+      <li>Cost aproximat per pack: <strong>0,05-0,08 EUR</strong></li>
+      <li>La clau d'API es guarda nomes al teu navegador</li>
+    </ul>
+    <h3 style="font-size:13px;font-weight:700;color:#1a1a1a;margin:0 0 8px">Problemes frequents</h3>
+    <ul style="font-size:13px;color:#444;line-height:1.8;margin:0;padding-left:20px">
+      <li><strong>No es carrega el fitxer</strong> - Prova amb .txt o enganxa el text manualment</li>
+      <li><strong>Error de clau d'API</strong> - Comprova que comenca per sk-ant- i que l'has desat</li>
+      <li><strong>No es generen tots els apartats</strong> - Torna a intentar-ho</li>
+    </ul>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="info-bar"> Omple les dades, adjunta la DPT o oferta ATRI (.docx, .pdf o .txt) i clica Generar. Obtindras el pack complet de 6 apartats en format PDF.</div>
+
+  <div class="card">
+    <div class="card-title"> Clau d'API Anthropic</div>
+    <div class="warn-bar">La clau es guarda nomes al teu navegador. Nomes cal introduir-la una vegada.</div>
+    <label>Clau d'API (sk-ant-...)</label>
+    <div class="api-row">
+      <input type="password" id="apiKey" placeholder="sk-ant-api03-..." autocomplete="new-password" />
+      <button class="btn-small" id="toggleBtn" onclick="toggleKey()">Mostrar</button>
+      <button class="btn-small btn-green" onclick="saveKey()">Desar</button>
+    </div>
+    <div class="api-saved" id="apiSaved">Clau desada al navegador</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"> Dades del lloc</div>
+    <div class="grid2">
+      <div>
+        <label>Nom del lloc *</label>
+        <input type="text" id="jobName" placeholder="Ex: Tecnic/a de Laboratori" />
+      </div>
+      <div>
+        <label>Codi d'oferta *</label>
+        <input type="text" id="jobCode" placeholder="Ex: ATL002-26" />
+      </div>
+    </div>
+    <label>Tipus de perfil *</label>
+    <select id="perfil">
+      <option value="">Selecciona el tipus de perfil...</option>
+      <option value="perfil tecnic (enginyeria, automatitzacio, IT, laboratori, projectes)">Perfil tecnic</option>
+      <option value="perfil de manteniment">Perfil manteniment</option>
+      <option value="perfil d'operacio">Perfil operacio</option>
+      <option value="perfil transversal (suport estrategic a un sistema critic)">Perfil transversal</option>
+      <option value="talent jove / universitari">Talent jove / universitari</option>
+      <option value="comandament i responsabilitat">Comandaments</option>
+      <option value="Projectes i Obres">Projectes i Obres</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <div class="card-title"> Document del lloc (DPT o oferta ATRI)</div>
+    <div class="drop" id="drop"
+      onclick="document.getElementById('fileIn').click()"
+      ondragover="event.preventDefault();document.getElementById('drop').style.borderColor='#0f6e56';document.getElementById('drop').style.background='#e1f5ee'"
+      ondragleave="document.getElementById('drop').style.borderColor='#ccc';document.getElementById('drop').style.background='#fafaf8'"
+      ondrop="event.preventDefault();document.getElementById('drop').style.borderColor='#ccc';document.getElementById('drop').style.background='#fafaf8';handleFile(event.dataTransfer.files[0])">
+      <div class="drop-icon"></div>
+      <p><strong>Clica o arrossega</strong> la DPT o l'oferta ATRI</p>
+      <small>Formats acceptats: .docx · .pdf · .txt</small>
+      <div id="fileTag"></div>
+    </div>
+    <input type="file" id="fileIn" accept=".docx,.pdf,.txt" style="display:none" onchange="handleFile(this.files[0])" />
+    <div style="text-align:center;margin:12px 0 8px;font-size:12px;color:#aaa">o escriu / enganxa el text manualment</div>
+    <textarea id="manualText" rows="5" placeholder="Enganxa aqui el contingut de la DPT o escriu la informacio del lloc..." oninput="updateManualCount()" style="width:100%;border:1px solid #ddd;border-radius:6px;padding:10px 12px;font-size:13px;font-family:Arial,sans-serif;resize:vertical;outline:none;line-height:1.5"></textarea>
+    <div id="manualCount" style="font-size:11px;color:#aaa;text-align:right;margin-top:3px">0 caracters</div>
+  </div>
+
+  <button class="btn-gen" id="genBtn" onclick="runGeneration()">
+    Generar pack de difusio i descarregar PDF
+  </button>
+
+  <div class="steps" id="steps">
+    <div class="step-row"><span class="dot" id="d1">1</span> Llegint document...</div>
+    <div class="step-row"><span class="dot" id="d2">2</span> Generant fitxa executiva (A)...</div>
+    <div class="step-row"><span class="dot" id="d3">3</span> Generant versio ATRI (B)...</div>
+    <div class="step-row"><span class="dot" id="d4">4</span> Generant versio LinkedIn (C)...</div>
+    <div class="step-row"><span class="dot" id="d5">5</span> Generant versio portals (D)...</div>
+    <div class="step-row"><span class="dot" id="d6">6</span> Generant pack FP (E)...</div>
+    <div class="step-row"><span class="dot" id="d7">7</span> Generant pla de canals (F)...</div>
+    <div class="step-row"><span class="dot" id="d8">8</span> Preparant PDF...</div>
+  </div>
+
+  <div class="result-box" id="resultBox">
+    <div class="result-header">
+      <span class="result-title" id="resultTitle">Pack generat</span>
+      <a id="dlBtn" class="dl-btn gray" href="#">Descarregar PDF</a>
+    </div>
+    <div class="tabs" id="tabsRow"></div>
+    <div class="panels" id="panelsWrap"></div>
+  </div>
+
+</div>
+
+<script>
+var fileText = '';
+var results = {};
+var activeTab = 'a';
+
+var TABS = [
+  {id:'a',label:'A - Fitxa'},
+  {id:'b',label:'B - ATRI'},
+  {id:'c',label:'C - LinkedIn'},
+  {id:'d',label:'D - Portals'},
+  {id:'e',label:'E - FP'},
+  {id:'f',label:'F - Canals'}
+];
+
+var ATL_CONTEXT = "DOCUMENTS DE REFERENCIA ATL:\n\n=== PROPOSTA DE VALOR AL TALENT ===\nPERFIL TECNIC: Infraestructures essencials d'alta complexitat. Operacio de sistemes automatitzats. Decisio tecnica amb impacte directe. Frases: Infraestructures essencials no admeten improvisacio. Enginyeria amb responsabilitat publica. Impacte sistemic, no departamental.\nPERFIL MANTENIMENT: Garantir que el sistema funcioni es garantir el servei. No es manteniment rutinari; es continuitat operativa d'infraestructures estrategiques. Frases: Garantir que tot funcioni es garantir qualitat de vida. Cultura de seguretat per sobre de tot.\nPERFIL OPERACIO: Treball tangible amb impacte immediat. Frases: El teu treball es veu. Responsabilitat directa sobre el servei. Infraestructures que no poden fallar.\nPERFIL TRANSVERSAL: No es gestio administrativa convencional. Es suport estrategic a un sistema critic. Frases: Suport a infraestructures essencials. Part essencial d'un sistema estrategic.\nTALENT JOVE: No cal venir del sector de l'aigua. Busquem capacitat tecnica i voluntat d'impacte. Frases: No busquem experiencia en aigua, busquem talent tecnic. Impacte real des del primer dia.\nCOMANDAMENTS: Liderar a ATL es garantir que els equips treballen amb criteri i rigor en un sistema que no pot fallar.\nPROJECTES I OBRES: Enginyeria aplicada en infraestructures reals que no es troben al sector privat convencional.\n\n=== PLA DE CANALS ===\nCanals base sempre: ATRI + web ATL. Operacio/manteniment: Feina Activa SOC, FP tecnica, serveis locals. Tecnic/enginyeria: LinkedIn, portals tecnics, universitats. TIC: portals TIC, LinkedIn. Transversal: portals per funcio, LinkedIn. Comandaments: LinkedIn, xarxa sectorial, escoles negoci. Talent jove: fires, universitats, FP, borses practiques.\n\n=== METODE REDACCIO 3EB ===\nPart NO tocar: requisits participacio, forma ocupacio, procediment seleccio, termini, canal oficial.\nPart millorar: aspectes valorables, competencies, dades descriptives.\nPart reescriure: obertura, presentacio rol, missio, ordre missatge, explicacio funcions, valor del lloc.\nEstructura: 1) Obertura impacte (mai requisits o contracte) 2) Missio lloc 3) Funcions blocs comprensibles 4) Entorn ATL valor diferencial 5) Requisits 6) Valorables 7) Condicions formals 8) CTA www.atl.cat";
+
+window.addEventListener('load', function() {
+  var saved = localStorage.getItem('atl_api_key');
+  if (saved) {
+    document.getElementById('apiKey').value = saved;
+    document.getElementById('apiSaved').style.display = 'block';
+  }
+});
+
+function toggleKey() {
+  var inp = document.getElementById('apiKey');
+  var btn = document.getElementById('toggleBtn');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    btn.textContent = 'Ocultar';
+  } else {
+    inp.type = 'password';
+    btn.textContent = 'Mostrar';
+  }
+}
+
+function updateManualCount() {
+  var v = document.getElementById('manualText').value;
+  document.getElementById('manualCount').textContent = v.length + ' caracters';
+}
+
+function saveKey() {
+  var k = document.getElementById('apiKey').value.trim();
+  if (!k) return;
+  localStorage.setItem('atl_api_key', k);
+  var el = document.getElementById('apiSaved');
+  el.style.display = 'block';
+  el.textContent = 'Clau desada correctament';
+}
+
+function getKey() {
+  var v = document.getElementById('apiKey').value.trim();
+  return v || localStorage.getItem('atl_api_key') || '';
+}
+
+function setDot(n, cls) {
+  var d = document.getElementById('d' + n);
+  d.className = 'dot' + (cls ? ' ' + cls : '');
+  d.textContent = cls === 'ok' ? 'OK' : cls === 'err' ? 'ERR' : n;
+}
+
+async function handleFile(file) {
+  if (!file) return;
+  var ext = file.name.split('.').pop().toLowerCase();
+  var tag = document.getElementById('fileTag');
+  tag.innerHTML = '<span style="font-size:12px;color:#666">Llegint ' + file.name + '...</span>';
+
+  try {
+    if (ext === 'txt') {
+      fileText = await file.text();
+      fileText = fileText.substring(0, 8000);
+
+    } else if (ext === 'docx') {
+      var buf = await file.arrayBuffer();
+      var zip = await JSZip.loadAsync(buf);
+      var xmlFile = zip.file('word/document.xml');
+      if (!xmlFile) throw new Error('Fitxer docx invalid');
+      var xml = await xmlFile.async('string');
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(xml, 'text/xml');
+      var nodes = doc.getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main', 't');
+      var texts = [];
+      for (var i = 0; i < nodes.length; i++) {
+        texts.push(nodes[i].textContent);
+      }
+      fileText = texts.join(' ').trim().substring(0, 8000);
+
+    } else if (ext === 'pdf') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      var buf2 = await file.arrayBuffer();
+      var pdf = await pdfjsLib.getDocument({data: buf2}).promise;
+      var allText = '';
+      for (var p = 1; p <= Math.min(pdf.numPages, 20); p++) {
+        var page = await pdf.getPage(p);
+        var tc = await page.getTextContent();
+        allText += tc.items.map(function(item) { return item.str; }).join(' ') + '\n';
+      }
+      fileText = allText.trim().substring(0, 8000);
+    }
+
+    var n = fileText.replace(/\s/g, '').length;
+    if (n > 100) {
+      tag.innerHTML = '<span class="file-ok"> ' + file.name + ' &nbsp;-&nbsp; ' + n + ' caracters extrets</span>';
+    } else {
+      tag.innerHTML = '<span class="file-err">(!) Poc text extret de ' + file.name + '. Prova amb .txt</span>';
+    }
+  } catch(e) {
+    fileText = '';
+    tag.innerHTML = '<span class="file-err">(!) Error llegint el fitxer: ' + e.message + '</span>';
+  }
+}
+
+function renderTabs() {
+  var tabsRow = document.getElementById('tabsRow');
+  var panelsWrap = document.getElementById('panelsWrap');
+  tabsRow.innerHTML = TABS.map(function(t) {
+    return '<button class="tab' + (activeTab === t.id ? ' on' : '') + '" onclick="switchTab(\'' + t.id + '\')">' + t.label + '</button>';
+  }).join('');
+  panelsWrap.innerHTML = TABS.map(function(t) {
+    return '<div class="panel' + (activeTab === t.id ? ' on' : '') + '" id="panel-' + t.id + '">' +
+      '<button class="copy-btn" onclick="doCopy(\'' + t.id + '\')">Copiar text</button>' +
+      '<pre id="text-' + t.id + '">' + (results[t.id] || '') + '</pre>' +
+      '</div>';
+  }).join('');
+}
+
+function switchTab(id) {
+  activeTab = id;
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('on'); });
+  document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('on'); });
+  var found = document.querySelectorAll('.tab');
+  for (var i = 0; i < found.length; i++) {
+    if (found[i].textContent === TABS.find(function(x) { return x.id === id; }).label) {
+      found[i].classList.add('on');
+    }
+  }
+  var panel = document.getElementById('panel-' + id);
+  if (panel) panel.classList.add('on');
+}
+
+function doCopy(id) {
+  var text = document.getElementById('text-' + id).textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    var btns = document.querySelectorAll('.copy-btn');
+    btns.forEach(function(b) {
+      if (b.getAttribute('onclick') && b.getAttribute('onclick').indexOf(id) !== -1) {
+        b.textContent = 'Copiat!';
+        setTimeout(function() { b.textContent = 'Copiar text'; }, 2000);
+      }
+    });
+  });
+}
+
+async function callAPI(sys, prompt, onChunk) {
+  var key = getKey();
+  var resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5',
+      max_tokens: 32000,
+      stream: true,
+      system: sys,
+      messages: [{role: 'user', content: prompt}],
+      metadata: {
+        user_id: 'atl-seleccio'
+      }
+    })
+  });
+  if (!resp.ok) {
+    var e = await resp.json();
+    throw new Error(e.error ? e.error.message : 'Error API ' + resp.status);
+  }
+  var reader = resp.body.getReader();
+  var dec = new TextDecoder();
+  var full = '';
+  while (true) {
+    var res = await reader.read();
+    if (res.done) break;
+    var lines = dec.decode(res.value).split('\n');
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      if (!line.startsWith('data: ')) continue;
+      var d = line.slice(6).trim();
+      if (d === '[DONE]') continue;
+      try {
+        var j = JSON.parse(d);
+        if (j.type === 'content_block_delta' && j.delta && j.delta.text) {
+          full += j.delta.text;
+          if (onChunk) onChunk(full);
+        }
+      } catch(err) {}
+    }
+  }
+  return full;
+}
+
+function parseSections(text) {
+  var tags = ['A','B','C','D','E','F'];
+  var out = {};
+  for (var i = 0; i < tags.length; i++) {
+    var tag = tags[i];
+    var next = tags[i+1];
+    var pattern = '===SECCIO_' + tag + '===([\\s\\S]*?)' + (next ? '===SECCIO_' + next + '===' : '$');
+    var m = text.match(new RegExp(pattern));
+    out[tag.toLowerCase()] = m ? m[1].trim() : '';
+  }
+  return out;
+}
+
+async function runGeneration() {
+  var key = getKey();
+  if (!key || key.indexOf('sk-') !== 0) {
+    alert("Introdueix la clau d'API i clica Desar.");
+    document.getElementById('apiKey').focus();
+    return;
+  }
+  var jobName = document.getElementById('jobName').value.trim();
+  var jobCode = document.getElementById('jobCode').value.trim();
+  var perfil = document.getElementById('perfil').value;
+  if (!jobName) { alert('Introdueix el nom del lloc.'); return; }
+  if (!jobCode) { alert("Introdueix el codi de l'oferta."); return; }
+  if (!perfil) { alert('Selecciona el tipus de perfil.'); return; }
+
+  var btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.textContent = 'Generant pack...';
+  document.getElementById('steps').classList.add('show');
+  document.getElementById('resultBox').classList.add('show');
+  results = {};
+  renderTabs();
+  for (var i = 1; i <= 8; i++) setDot(i, '');
+
+  var manualText = document.getElementById('manualText').value.trim();
+  var docContent = fileText || manualText;
+  if (!docContent) {
+    alert('Has d\'adjuntar un document o escriure la informacio del lloc abans de generar.');
+    btn.disabled = false;
+    btn.textContent = 'Generar pack de difusio i descarregar PDF';
+    return;
+  }
+  var docPart = '\n\nDOCUMENT DEL LLOC (DPT/ATRI):\n' + docContent.substring(0, 5000);
+  var SYS = "Ets expert en employer branding i seleccio de personal d'ATL (Ens d'Abastament d'Aigua Ter Llobregat), empresa publica de la Generalitat de Catalunya. Generes peces de difusio professionals i llestes per publicar. Usa sempre llenguatge inclusiu. Mai modifiques requisits legals ni canal oficial (www.atl.cat). No inventis salari ni condicions no publicades.\n\nORTOGRAFIA I LLENGUA: Escriu en catala normatiu correcte seguint les normes de l'Institut d'Estudis Catalans (IEC). Revisa especialment: accents (informacio->informacio es incorrecte, usa accents on toca: informacio, seleccio, oferta, gestio, funcio, operacio, atraccio, inscripcio, valoracio, competencia, condicio, presentacio, qualificacio, titulacio, experiencia, coordinacio, planificacio, execucio), apostrofes correctes (l'aigua, d'ATL, l'empresa), contraccions (del, al, pel), puntuacio correcta, majuscules adequades. Els textos han de ser impecables ortograficament abans de lliurar-los.\n" + ATL_CONTEXT;
+
+  var PROMPT = [
+    'Genera el PAQUET DE DIFUSIO DE VACANT per al lloc "' + jobName + '" (codi: ' + jobCode + ', perfil: ' + perfil + ').' + docPart,
+    '',
+    'INSTRUCCIONS GENERALS:',
+    '- Catala normatiu perfecte. Accents, apostrofes i contraccions correctes. Cap paraula en castella.',
+    '- Textos llestos per publicar sense cap modificacio.',
+    '- Segueix EXACTAMENT el format i estructura indicats per a cada apartat.',
+    '- Extreu tota la informacio possible del document adjunt.',
+    '- No inventis salari, beneficis ni condicions no publicades.',
+    '- Canal dinscripcio sempre: www.atl.cat',
+    '',
+    'Separa cada apartat amb el tag exacte indicat:',
+    '',
+    '===SECCIO_A===',
+    'FITXA EXECUTIVA PER A SELECCIO',
+    'Primer escriu: "Aquesta fitxa permet gestionar la difusio de la vacant sense consultar la documentacio completa."',
+    'Despres una taula amb aquestes files exactes (format: Camp | Valor):',
+    'Nom del lloc | Codi de loferta | Perfil de difusio | Centre de treball | Grup professional | Classe de personal | Jornada i horari | Retribucio | Canals a activar | Canals no recomanats inicialment (amb motiu) | Missatge principal datraccio (2-3 frases dimpacte) | Requisits critics (no negociables) | Aspectes valorables clau | CTA oficial dinscripcio (www.atl.cat + codi + termini) | Advertencies juridiques',
+    '',
+    '===SECCIO_B===',
+    'VERSIO INSTITUCIONAL PER A ATRI / CANAL FORMAL',
+    'Primer escriu la instruccio dus: "Instruccio dus: Aquesta versio substitueix o complementa la descripcio estandard de la convocatoria ATRI. Mante el rigor institucional pero millora lapertura, la presentacio del rol i la claredat del perfil buscat. No sha modificat cap requisit legal."',
+    'Estructura:',
+    '## El lloc de treball (presentacio ATL + context del lloc, 2-3 paragrafs)',
+    '## Missio del lloc (1 paragraf concis)',
+    '## Funcions principals (3-4 blocs amb subtitol ### i llistes de punts)',
+    '## Requisits de participacio (### Requisits imprescindibles + Fase I/II si escau)',
+    '## Aspectes que es valoraran (### Experiencia professional + ### Coneixements tecnics + ### Acreditacions + ### Competencies)',
+    '## Condicions del lloc (taula: Centre de treball | Grup professional | Jornada | Retribucio | Modalitat de contracte)',
+    '## Com presentar la candidatura (instruccions telematics + www.atl.cat + codi + termini)',
+    'Extensions: 800-1000 paraules.',
+    '',
+    '===SECCIO_C===',
+    'VERSIO LINKEDIN',
+    'Primer escriu la instruccio dus: "Instruccio dus: Text llest per publicar al perfil corporatiu dATL a LinkedIn. No requereix cap modificacio."',
+    '## Versio completa (700-900 paraules)',
+    '**Titular recomanat per al post** (1 frase dimpacte)',
+    'Text complet del post amb: obertura narrativa potent, explicacio del rol, "Que faras?" (llista de punts), "Quin perfil busquem?" (llista), "Que ofereix aquest context?" (llista), condicions formals breus, CTA exclusivament www.atl.cat + codi + termini, hashtags recomanats (10-12)',
+    '## Versio breu alternativa (150-200 paraules) per a primera publicacio o reutilitzacio',
+    '',
+    '===SECCIO_D===',
+    'VERSIO PER A PORTALS DOCUPACIO',
+    'Primer escriu quins portals es recomanen i la instruccio dus: "Text llest per copiar i enganxar. No requereix adaptacio."',
+    'Estructura amb aquests apartats numerats:',
+    '## 1. Titol recomanat (clar, buscable, amb ubicacio)',
+    '## 2. Subtitol / entradilla (1-2 frases dimpacte)',
+    '## 3. Qui som - ATL (presentacio ATL per a qui no la coneix, 2 paragrafs)',
+    '## 4. El lloc de treball (rol, missio i valor, 2 paragrafs)',
+    '## 5. Funcions principals (blocs amb subtitol i llistes)',
+    '## 6. Requisits imprescindibles (llista)',
+    '## 7. Aspectes valorables (llista)',
+    '## 8. Que busquem en la persona (competencies, actitud, estil)',
+    '## 9. Que ofereix aquest context (sense inventar beneficis)',
+    '## 10. Condicions formals (taula o llista)',
+    '## 11. Com presentar la candidatura (www.atl.cat + codi + termini)',
+    '## 12. Versio breu alternativa (150 paraules)',
+    '## 13. Paraules clau recomanades (llista)',
+    '',
+    '===SECCIO_E===',
+    'PACK PER A CENTRES DE FP I TALENT JOVE',
+    'Primer escriu quins perfils FP son rellevants per a aquest lloc.',
+    '## 1. Email al centre de FP',
+    'Assumpte: [escriu lassumpte]',
+    'Cos complet de lemail: salutacio, presentacio ATL, per que es rellevant per alumnat o exalumnat, peticio de difusio, CTA www.atl.cat + codi + termini, signatura ATL Seleccio',
+    '## 2. Text per a borsa de treball del centre (text complet llest per penjar)',
+    '## 3. Missatge breu per a tutor/a (per email o WhatsApp, max 100 paraules)',
+    '## 4. Missatge per a alumnat jove (pedagogic, accessible, motivador, sense prometre estabilitat)',
+    '',
+    '===SECCIO_F===',
+    'PLA TANCAT DACTIVACIO DE CANALS. Totes les decisions son operatives.',
+    'Genera exactament 12 canals numerats amb aquest format de targeta (max 1 frase per camp):',
+    '## 1. ATRI',
+    'Prioritat: CRITICA | Moment: Dia 0',
+    'Objectiu: [1 frase]',
+    'Accio: [1 frase concreta]',
+    'Indicador: [1 frase]',
+    'Reforca si: [1 frase amb criteri concret]',
+    '---',
+    'Segueix amb: ## 2. Web ATL ## 3. LinkedIn corporatiu ## 4. Prescripcio interna ## 5. Portals generalistes (InfoJobs/Indeed) ## 6. LinkedIn Jobs (promocio pagada) ## 7. Portals tecnics/sectorials ## 8. Col-legis professionals ## 9. Universitats/Masters ## 10. Centres FP ## 11. SOC/Feina Activa ## 12. Headhunting (opcional)',
+    'Usa el mateix format per a cada canal. Max 5 linies per canal. Sense sub-llistes.',
+    'Al final afegeix:',
+    'CALENDARI RESUM DACTIVACIO en format taula: Dia | Canals activats | Responsable | Verificacio',
+    'INDICADORS GLOBALS DE CAMPANYA: Total candidatures target, Qualitat candidatures, Temps mig cobertura, Cost per candidatura.',
+    'NO afegeixis cap altra seccio com CANALS NO ACTIVATS.',
+  ].join('\n');
+
+  try {
+    setDot(1, 'run'); await new Promise(function(r) { setTimeout(r, 100); }); setDot(1, 'ok');
+    for (var n = 2; n <= 7; n++) setDot(n, 'run');
+    renderTabs(); switchTab('a');
+
+    var rawText = await callAPI(SYS, PROMPT, function(raw) {
+      var parsed = parseSections(raw);
+      var keys = Object.keys(parsed);
+      for (var k = 0; k < keys.length; k++) {
+        var key2 = keys[k];
+        if (parsed[key2]) {
+          results[key2] = parsed[key2];
+          var el = document.getElementById('text-' + key2);
+          if (el) el.textContent = parsed[key2];
+        }
+      }
+      if (results.a) setDot(2, 'ok');
+      if (results.b) setDot(3, 'ok');
+      if (results.c) setDot(4, 'ok');
+      if (results.d) setDot(5, 'ok');
+      if (results.e) setDot(6, 'ok');
+      if (results.f) setDot(7, 'ok');
+    });
+
+    results = parseSections(rawText);
+    for (var n2 = 2; n2 <= 7; n2++) setDot(n2, 'ok');
+    renderTabs();
+
+    setDot(8, 'run');
+    buildWord(jobName, jobCode, perfil);
+    setDot(8, 'ok');
+
+    document.getElementById('resultTitle').textContent = 'Pack complet: ' + jobName + ' - ' + jobCode;
+    switchTab('a');
+
+  } catch(err) {
+    console.error(err);
+    document.getElementById('resultTitle').textContent = 'Error: ' + err.message;
+    for (var n3 = 1; n3 <= 8; n3++) {
+      if (document.getElementById('d' + n3).classList.contains('run')) setDot(n3, 'err');
+    }
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Generar pack de difusio i descarregar PDF';
+}
+
+function buildWord(jobName, jobCode, perfil) {
+  var secs = [
+    {l:'A', t:'Fitxa executiva per a Seleccio', k:'a'},
+    {l:'B', t:'Versio ATRI / canal formal', k:'b'},
+    {l:'C', t:'Versio LinkedIn', k:'c'},
+    {l:'D', t:'Versio portals de feina', k:'d'},
+    {l:'E', t:'Pack centres FP / talent jove', k:'e'},
+    {l:'F', t:"Pla tancat d'activacio de canals", k:'f'}
+  ];
+
+  function esc(t) {
+    return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function fmt(text) {
+    if (!text) return '<p>No generat.</p>';
+    var lines = text.split('\n');
+    var html = '';
+    var inList = false;
+    var inTable = false;
+    var tableRows = [];
+
+    function flushList() { if (inList) { html += '</ul>'; inList = false; } }
+    function flushTable() {
+      if (!inTable || tableRows.length === 0) return;
+      html += '<table style="width:100%;border-collapse:collapse;font-size:9.5pt;margin:8px 0">';
+      for (var r = 0; r < tableRows.length; r++) {
+        var cells = tableRows[r].split('|').map(function(c){ return c.trim(); }).filter(function(c){ return c.length > 0; });
+        html += '<tr>';
+        for (var c = 0; c < cells.length; c++) {
+          var cellContent = esc(cells[c]).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+          if (r === 0) {
+            html += '<th style="background:#0f6e56;color:#fff;padding:5px 7px;text-align:left;border:1px solid #0a4a3a;font-size:9pt">' + cellContent + '</th>';
+          } else {
+            var bg = r % 2 === 0 ? '#f8faf8' : '#fff';
+            html += '<td style="padding:4px 7px;border:1px solid #ddd;background:' + bg + ';vertical-align:top">' + cellContent + '</td>';
+          }
+        }
+        html += '</tr>';
+      }
+      html += '</table>';
+      inTable = false;
+      tableRows = [];
+    }
+
+    for (var i = 0; i < lines.length; i++) {
+      var l = lines[i].trim();
+      if (!l) {
+        flushList();
+        flushTable();
+        continue;
+      }
+      // Markdown table row - detect any line with 2+ pipe chars
+      var pipeCount = (l.match(/\|/g) || []).length;
+      if (pipeCount >= 2) {
+        flushList();
+        // Skip separator rows like |---|---|
+        if (/^[\|\-\s:]+$/.test(l)) continue;
+        inTable = true;
+        // Normalize: remove leading/trailing pipes if present
+        var row = l.startsWith('|') ? l.slice(1) : l;
+        row = row.endsWith('|') ? row.slice(0, -1) : row;
+        tableRows.push(row);
+        continue;
+      } else if (inTable) {
+        flushTable();
+      }
+      if (/^#{1,3}\s/.test(l)) {
+        flushList();
+        var level = l.match(/^(#+)/)[1].length;
+        var size = level === 1 ? '13pt' : level === 2 ? '11.5pt' : '10.5pt';
+        html += '<h' + level + ' style="font-size:' + size + ';margin:10px 0 4px;color:#1a1a1a">' + esc(l.replace(/^#+\s*/,'')) + '</h' + level + '>';
+      } else if (/^[\u2022\-\*]\s/.test(l)) {
+        if (!inList) { html += '<ul style="margin:3px 0 3px 18px;padding:0">'; inList = true; }
+        html += '<li style="margin:1px 0">' + esc(l.replace(/^[\u2022\-\*]\s*/,'')).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>') + '</li>';
+      } else if (/^\d+\.\s/.test(l)) {
+        if (!inList) { html += '<ul style="margin:3px 0 3px 18px;padding:0">'; inList = true; }
+        html += '<li style="margin:1px 0">' + esc(l.replace(/^\d+\.\s*/,'')).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>') + '</li>';
+      } else if (/^\*\*(.+)\*\*$/.test(l)) {
+        flushList();
+        html += '<p style="margin:6px 0 2px"><strong>' + esc(l.replace(/\*\*/g,'')) + '</strong></p>';
+      } else {
+        flushList();
+        html += '<p style="margin:2px 0">' + esc(l).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>') + '</p>';
+      }
+    }
+    flushList();
+    flushTable();
+    return html;
+  }
+
+  var css = '<style>' +
+    '*{box-sizing:border-box;margin:0;padding:0}' +
+    'body{font-family:Arial,sans-serif;font-size:10.5pt;line-height:1.5;color:#000;padding:20px 30px}' +
+    'table{width:100%;border-collapse:collapse;font-size:9.5pt;margin:8px 0;page-break-inside:auto}' +
+    'th{background:#0f6e56;color:#fff;padding:5px 7px;text-align:left;border:1px solid #0a4a3a}' +
+    'td{padding:4px 7px;border:1px solid #ddd;vertical-align:top}' +
+    'tr:nth-child(even){background:#f8faf8}' + +
+    'h1{font-size:14pt;color:#0F6E56;border-bottom:2px solid #0F6E56;padding-bottom:4px;margin:0 0 10px}' +
+    'h3{font-size:11pt;font-weight:bold;margin:10px 0 4px}' +
+    'p{margin:2px 0}' +
+    'ul{margin:4px 0 4px 20px;padding:0}' +
+    'li{margin:1px 0}' +
+    'strong{font-weight:bold}' +
+    '.cover{text-align:center;padding:60px 40px;border-bottom:2px solid #0F6E56;margin-bottom:30px}' +
+    '.cover-label{color:#0F6E56;font-size:11pt;margin-bottom:10px}' +
+    '.cover-title{font-size:22pt;font-weight:bold;margin-bottom:8px}' +
+    '.cover-code{font-size:14pt;color:#0F6E56;margin-bottom:8px}' +
+    '.cover-perfil{color:#666;font-size:10pt;margin-bottom:3px}' +
+    '.cover-atl{color:#0F6E56;font-weight:bold;margin-top:24px}' +
+    '.sec{margin-top:30px;padding-top:10px}' +
+    '@media print{' +
+      '@page{size:A4;margin:2cm}' +
+      '.cover{page-break-after:always}' +
+      '.sec{page-break-before:always}' +
+      'body{padding:0}' +
+      'th{-webkit-print-color-adjust:exact;print-color-adjust:exact;background:#0f6e56 !important;color:#fff !important}' +
+      'tr:nth-child(even) td{-webkit-print-color-adjust:exact;print-color-adjust:exact;background:#f8faf8 !important}' +
+      'h1{-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#0f6e56 !important;border-bottom-color:#0f6e56 !important}' +
+    '}' +
+    '</style>';
+
+  var cover = '<div class="cover">' +
+    '<div class="cover-label">Pack complet de difusio d\'oferta ATL</div>' +
+    '<div class="cover-title">' + esc(jobName) + '</div>' +
+    '<div class="cover-code">' + esc(jobCode) + '</div>' +
+    '<div class="cover-perfil">Perfil: ' + esc(perfil) + '</div>' +
+    '<div class="cover-perfil">Document preparat per a l\'area de Seleccio d\'ATL</div>' +
+    '<div class="cover-atl">ATL - Ens d\'Abastament d\'Aigua Ter Llobregat</div>' +
+    '</div>';
+
+  var secsHtml = secs.map(function(s) {
+    return '<div class="sec"><h1>' + s.l + '.  ' + esc(s.t) + '</h1>' + fmt(results[s.k]) + '</div>';
+  }).join('');
+
+  var fullHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + esc(jobCode) + ' - ' + esc(jobName) + '</title>' + css + '</head><body>' + cover + secsHtml + '</body></html>';
+
+  // Generate blob and offer download + preview
+  // CANVI 3+4: Obrir en nova finestra amb botons Tancar i Generar PDF, i nom correcte
+  var blob = new Blob([fullHtml], {type:'text/html;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+
+  var previewWin = window.open('', '_blank', 'width=1000,height=750,scrollbars=yes');
+  if (previewWin) {
+    previewWin.document.write(
+      '<html><head><title>' + jobCode + ' - ' + jobName + '</title></head><body style="margin:0;padding:0">' +
+      '<div style="position:fixed;top:0;left:0;right:0;background:#0f6e56;padding:10px 20px;display:flex;gap:10px;z-index:9999">' +
+      '<button onclick="window.print()" style="background:#fff;color:#0f6e56;border:none;border-radius:6px;padding:8px 18px;font-size:14px;font-weight:700;cursor:pointer">Generar PDF (Ctrl+P)</button>' +
+      '<button onclick="window.close()" style="background:transparent;color:#fff;border:1px solid #fff;border-radius:6px;padding:8px 14px;font-size:14px;cursor:pointer">X Tancar</button>' +
+      '<span style="color:#fff;font-size:13px;line-height:2.2;margin-left:10px">' + jobCode + ' - ' + jobName + '</span>' +
+      '</div>' +
+      '<div style="margin-top:50px">' + fullHtml.replace('<html>','').replace('</html>','').replace(/.*<body>/s,'').replace(/<\/body>.*/s,'') + '</div>' +
+      '</body></html>'
+    );
+    previewWin.document.close();
+  }
+
+  var a = document.getElementById('dlBtn');
+  a.className = 'dl-btn';
+  a.textContent = 'Veure i desar PDF';
+  a.onclick = function(e) {
+    e.preventDefault();
+    var w = window.open('', '_blank', 'width=1000,height=750,scrollbars=yes');
+    if (w) {
+      w.document.write('<html><head><title>' + jobCode + ' - ' + jobName + '</title></head><body style="margin:0;padding:0"><div style="position:fixed;top:0;left:0;right:0;background:#0f6e56;padding:10px 20px;display:flex;gap:10px;z-index:9999"><button onclick="window.print()" style="background:#fff;color:#0f6e56;border:none;border-radius:6px;padding:8px 18px;font-size:14px;font-weight:700;cursor:pointer">Generar PDF (Ctrl+P)</button><button onclick="window.close()" style="background:transparent;color:#fff;border:1px solid #fff;border-radius:6px;padding:8px 14px;font-size:14px;cursor:pointer">X Tancar</button><span style="color:#fff;font-size:13px;line-height:2.2;margin-left:10px">' + jobCode + ' - ' + jobName + '</span></div><iframe src="' + url + '" style="width:100%;height:calc(100vh - 50px);border:none;margin-top:50px"></iframe></body></html>');
+      w.document.close();
+    }
+  };
+}
+</script>

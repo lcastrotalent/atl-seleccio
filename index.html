@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador Pack Difusio ATL Seleccio</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f4f5f0;color:#1a1a1a;min-height:100vh}
+.header{background:#fff;border-bottom:1px solid #e0e0e0;padding:18px 32px;display:flex;align-items:center;gap:14px}
+.logo{width:42px;height:42px;background:#e1f5ee;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px}
+.header h1{font-size:17px;font-weight:700;color:#1a1a1a}
+.header p{font-size:12px;color:#777;margin-top:2px}
+.main{max-width:740px;margin:28px auto;padding:0 20px 60px}
+.info-bar{background:#e1f5ee;border:1px solid #5dcaa5;border-radius:8px;padding:11px 16px;font-size:13px;color:#085041;margin-bottom:18px;line-height:1.6}
+.warn-bar{background:#fff8e1;border:1px solid #f0c040;border-radius:8px;padding:11px 16px;font-size:13px;color:#7a5500;margin-bottom:12px;line-height:1.6}
+.card{background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:22px;margin-bottom:14px}
+.card-title{font-size:11px;font-weight:700;color:#777;text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px}
+label{font-size:12px;font-weight:700;color:#444;display:block;margin-bottom:4px}
+input[type=text],input[type=password],select,textarea{width:100%;border:1px solid #ddd;border-radius:6px;padding:9px 12px;font-size:14px;color:#1a1a1a;background:#fff;font-family:Arial,sans-serif;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#0f6e56;box-shadow:0 0 0 2px rgba(15,110,86,.1)}
+.api-row{display:flex;gap:8px;align-items:flex-end}
+.api-row input{flex:1}
+.btn-small{background:none;border:1px solid #ddd;border-radius:6px;padding:9px 12px;cursor:pointer;font-size:12px;color:#666;white-space:nowrap;font-family:Arial,sans-serif}
+.btn-small:hover{background:#f5f5f3}
+.btn-green{background:#0f6e56;color:#fff;border-color:#0f6e56}
+.api-saved{font-size:11px;color:#0f6e56;margin-top:4px;display:none}
+.drop{border:2px dashed #ccc;border-radius:8px;padding:28px;text-align:center;cursor:pointer;background:#fafaf8;transition:all .15s}
+.drop:hover{border-color:#0f6e56;background:#e1f5ee}
+.drop-icon{font-size:28px;margin-bottom:8px}
+.drop p{font-size:13px;color:#666}
+.drop small{font-size:11px;color:#aaa;display:block;margin-top:4px}
+.file-ok{display:inline-flex;align-items:center;gap:6px;background:#e1f5ee;border:1px solid #5dcaa5;border-radius:20px;padding:4px 12px;font-size:12px;color:#085041;margin-top:10px}
+.file-err{display:inline-flex;align-items:center;gap:6px;background:#fce8e8;border:1px solid #f0a0a0;border-radius:20px;padding:4px 12px;font-size:12px;color:#7a1a1a;margin-top:10px}
+.btn-gen{width:100%;background:#0f6e56;color:#fff;border:none;border-radius:8px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s;margin-top:4px}
+.btn-gen:hover{opacity:.88}
+.btn-gen:disabled{opacity:.4;cursor:not-allowed}
+.steps{display:none;margin-top:16px;background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:16px 20px}
+.steps.show{display:block}
+.step-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #f5f5f3;font-size:13px;color:#444}
+.step-row:last-child{border:none}
+.dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;background:#f0f0f0;color:#bbb}
+.dot.run{background:#fff3cd;color:#7a4500}
+.dot.ok{background:#e1f5ee;color:#085041}
+.dot.err{background:#fce8e8;color:#8a1a1a}
+.result-box{display:none;margin-top:16px;background:#fff;border:1px solid #e0e0e0;border-radius:10px;overflow:hidden}
+.result-box.show{display:block}
+.result-header{padding:14px 20px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;background:#f8faf8}
+.result-title{font-size:14px;font-weight:700;color:#1a1a1a}
+.dl-btn{background:#0f6e56;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.dl-btn:hover{opacity:.88}
+.dl-btn.gray{background:#ddd;color:#999;pointer-events:none}
+.tabs{display:flex;background:#f4f5f0;overflow-x:auto;border-bottom:1px solid #e0e0e0}
+.tab{flex-shrink:0;padding:10px 16px;font-size:12px;font-weight:700;color:#888;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;font-family:Arial,sans-serif;white-space:nowrap}
+.tab.on{color:#0f6e56;border-bottom-color:#0f6e56;background:#fff}
+.panels{padding:18px 20px}
+.panel{display:none;max-height:400px;overflow-y:auto}
+.panel.on{display:block}
+.panel pre{white-space:pre-wrap;font-size:13px;line-height:1.75;color:#1a1a1a;font-family:Arial,sans-serif}
+.copy-btn{font-size:12px;color:#777;background:none;border:1px solid #ddd;border-radius:6px;padding:4px 12px;cursor:pointer;margin-bottom:10px;font-family:Arial,sans-serif}
+.copy-btn:hover{background:#f5f5f3;color:#1a1a1a}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo"></div>
+  <div>
+    <h1>Generador de Pack de Difusio · ATL Seleccio</h1>
+    <p>Nom del lloc + codi + perfil + document = pack complet llest per publicar</p>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="info-bar"> Omple les dades, adjunta la DPT o oferta ATRI (.docx, .pdf o .txt) i clica Generar. Obtindras el pack complet de 6 apartats i el Word descarregable.</div>
+
+  <div class="card">
+    <div class="card-title"> Clau d'API Anthropic</div>
+    <div class="warn-bar">La clau es guarda nomes al teu navegador. Nomes cal introduir-la una vegada.</div>
+    <label>Clau d'API (sk-ant-...)</label>
+    <div class="api-row">
+      <input type="password" id="apiKey" placeholder="sk-ant-api03-..." autocomplete="new-password" />
+      <button class="btn-small" id="toggleBtn" onclick="toggleKey()">Mostrar</button>
+      <button class="btn-small btn-green" onclick="saveKey()">Desar</button>
+    </div>
+    <div class="api-saved" id="apiSaved">Clau desada al navegador</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"> Dades del lloc</div>
+    <div class="grid2">
+      <div>
+        <label>Nom del lloc *</label>
+        <input type="text" id="jobName" placeholder="Ex: Tecnic/a de Laboratori" />
+      </div>
+      <div>
+        <label>Codi d'oferta *</label>
+        <input type="text" id="jobCode" placeholder="Ex: ATL002-26" />
+      </div>
+    </div>
+    <label>Tipus de perfil *</label>
+    <select id="perfil">
+      <option value="">Selecciona el tipus de perfil...</option>
+      <option value="perfil tecnic (enginyeria, automatitzacio, IT, laboratori, projectes)">Perfil tecnic</option>
+      <option value="perfil de manteniment">Perfil manteniment</option>
+      <option value="perfil d'operacio">Perfil operacio</option>
+      <option value="perfil transversal (suport estrategic a un sistema critic)">Perfil transversal</option>
+      <option value="talent jove / universitari">Talent jove / universitari</option>
+      <option value="comandament i responsabilitat">Comandaments</option>
+      <option value="Projectes i Obres">Projectes i Obres</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <div class="card-title"> Document del lloc (DPT o oferta ATRI)</div>
+    <div class="drop" id="drop"
+      onclick="document.getElementById('fileIn').click()"
+      ondragover="event.preventDefault();document.getElementById('drop').style.borderColor='#0f6e56';document.getElementById('drop').style.background='#e1f5ee'"
+      ondragleave="document.getElementById('drop').style.borderColor='#ccc';document.getElementById('drop').style.background='#fafaf8'"
+      ondrop="event.preventDefault();document.getElementById('drop').style.borderColor='#ccc';document.getElementById('drop').style.background='#fafaf8';handleFile(event.dataTransfer.files[0])">
+      <div class="drop-icon"></div>
+      <p><strong>Clica o arrossega</strong> la DPT o l'oferta ATRI</p>
+      <small>Formats acceptats: .docx · .pdf · .txt</small>
+      <div id="fileTag"></div>
+    </div>
+    <input type="file" id="fileIn" accept=".docx,.pdf,.txt" style="display:none" onchange="handleFile(this.files[0])" />
+  </div>
+
+  <button class="btn-gen" id="genBtn" onclick="runGeneration()">
+    Generar pack de difusio i descarregar PDF
+  </button>
+
+  <div class="steps" id="steps">
+    <div class="step-row"><span class="dot" id="d1">1</span> Llegint document...</div>
+    <div class="step-row"><span class="dot" id="d2">2</span> Generant fitxa executiva (A)...</div>
+    <div class="step-row"><span class="dot" id="d3">3</span> Generant versio ATRI (B)...</div>
+    <div class="step-row"><span class="dot" id="d4">4</span> Generant versio LinkedIn (C)...</div>
+    <div class="step-row"><span class="dot" id="d5">5</span> Generant versio portals (D)...</div>
+    <div class="step-row"><span class="dot" id="d6">6</span> Generant pack FP (E)...</div>
+    <div class="step-row"><span class="dot" id="d7">7</span> Generant pla de canals (F)...</div>
+    <div class="step-row"><span class="dot" id="d8">8</span> Preparant PDF...</div>
+  </div>
+
+  <div class="result-box" id="resultBox">
+    <div class="result-header">
+      <span class="result-title" id="resultTitle">Pack generat</span>
+      <a id="dlBtn" class="dl-btn gray" href="#">Descarregar PDF</a>
+    </div>
+    <div class="tabs" id="tabsRow"></div>
+    <div class="panels" id="panelsWrap"></div>
+  </div>
+
+</div>
+
+<script>
+var fileText = '';
+var results = {};
+var activeTab = 'a';
+
+var TABS = [
+  {id:'a',label:'A - Fitxa'},
+  {id:'b',label:'B - ATRI'},
+  {id:'c',label:'C - LinkedIn'},
+  {id:'d',label:'D - Portals'},
+  {id:'e',label:'E - FP'},
+  {id:'f',label:'F - Canals'}
+];
+
+var ATL_CONTEXT = "DOCUMENTS DE REFERENCIA ATL:\n\n=== PROPOSTA DE VALOR AL TALENT ===\nPERFIL TECNIC: Infraestructures essencials d'alta complexitat. Operacio de sistemes automatitzats. Decisio tecnica amb impacte directe. Frases: Infraestructures essencials no admeten improvisacio. Enginyeria amb responsabilitat publica. Impacte sistemic, no departamental.\nPERFIL MANTENIMENT: Garantir que el sistema funcioni es garantir el servei. No es manteniment rutinari; es continuitat operativa d'infraestructures estrategiques. Frases: Garantir que tot funcioni es garantir qualitat de vida. Cultura de seguretat per sobre de tot.\nPERFIL OPERACIO: Treball tangible amb impacte immediat. Frases: El teu treball es veu. Responsabilitat directa sobre el servei. Infraestructures que no poden fallar.\nPERFIL TRANSVERSAL: No es gestio administrativa convencional. Es suport estrategic a un sistema critic. Frases: Suport a infraestructures essencials. Part essencial d'un sistema estrategic.\nTALENT JOVE: No cal venir del sector de l'aigua. Busquem capacitat tecnica i voluntat d'impacte. Frases: No busquem experiencia en aigua, busquem talent tecnic. Impacte real des del primer dia.\nCOMANDAMENTS: Liderar a ATL es garantir que els equips treballen amb criteri i rigor en un sistema que no pot fallar.\nPROJECTES I OBRES: Enginyeria aplicada en infraestructures reals que no es troben al sector privat convencional.\n\n=== PLA DE CANALS ===\nCanals base sempre: ATRI + web ATL. Operacio/manteniment: Feina Activa SOC, FP tecnica, serveis locals. Tecnic/enginyeria: LinkedIn, portals tecnics, universitats. TIC: portals TIC, LinkedIn. Transversal: portals per funcio, LinkedIn. Comandaments: LinkedIn, xarxa sectorial, escoles negoci. Talent jove: fires, universitats, FP, borses practiques.\n\n=== METODE REDACCIO 3EB ===\nPart NO tocar: requisits participacio, forma ocupacio, procediment seleccio, termini, canal oficial.\nPart millorar: aspectes valorables, competencies, dades descriptives.\nPart reescriure: obertura, presentacio rol, missio, ordre missatge, explicacio funcions, valor del lloc.\nEstructura: 1) Obertura impacte (mai requisits o contracte) 2) Missio lloc 3) Funcions blocs comprensibles 4) Entorn ATL valor diferencial 5) Requisits 6) Valorables 7) Condicions formals 8) CTA www.atl.cat";
+
+window.addEventListener('load', function() {
+  var saved = localStorage.getItem('atl_api_key');
+  if (saved) {
+    document.getElementById('apiKey').value = saved;
+    document.getElementById('apiSaved').style.display = 'block';
+  }
+});
+
+function toggleKey() {
+  var inp = document.getElementById('apiKey');
+  var btn = document.getElementById('toggleBtn');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    btn.textContent = 'Ocultar';
+  } else {
+    inp.type = 'password';
+    btn.textContent = 'Mostrar';
+  }
+}
+
+function saveKey() {
+  var k = document.getElementById('apiKey').value.trim();
+  if (!k) return;
+  localStorage.setItem('atl_api_key', k);
+  var el = document.getElementById('apiSaved');
+  el.style.display = 'block';
+  el.textContent = 'Clau desada correctament';
+}
+
+function getKey() {
+  var v = document.getElementById('apiKey').value.trim();
+  return v || localStorage.getItem('atl_api_key') || '';
+}
+
+function setDot(n, cls) {
+  var d = document.getElementById('d' + n);
+  d.className = 'dot' + (cls ? ' ' + cls : '');
+  d.textContent = cls === 'ok' ? 'OK' : cls === 'err' ? 'ERR' : n;
+}
+
+async function handleFile(file) {
+  if (!file) return;
+  var ext = file.name.split('.').pop().toLowerCase();
+  var tag = document.getElementById('fileTag');
+  tag.innerHTML = '<span style="font-size:12px;color:#666">Llegint ' + file.name + '...</span>';
+
+  try {
+    if (ext === 'txt') {
+      fileText = await file.text();
+      fileText = fileText.substring(0, 8000);
+
+    } else if (ext === 'docx') {
+      var buf = await file.arrayBuffer();
+      var zip = await JSZip.loadAsync(buf);
+      var xmlFile = zip.file('word/document.xml');
+      if (!xmlFile) throw new Error('Fitxer docx invalid');
+      var xml = await xmlFile.async('string');
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(xml, 'text/xml');
+      var nodes = doc.getElementsByTagNameNS('http://schemas.openxmlformats.org/wordprocessingml/2006/main', 't');
+      var texts = [];
+      for (var i = 0; i < nodes.length; i++) {
+        texts.push(nodes[i].textContent);
+      }
+      fileText = texts.join(' ').trim().substring(0, 8000);
+
+    } else if (ext === 'pdf') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      var buf2 = await file.arrayBuffer();
+      var pdf = await pdfjsLib.getDocument({data: buf2}).promise;
+      var allText = '';
+      for (var p = 1; p <= Math.min(pdf.numPages, 20); p++) {
+        var page = await pdf.getPage(p);
+        var tc = await page.getTextContent();
+        allText += tc.items.map(function(item) { return item.str; }).join(' ') + '\n';
+      }
+      fileText = allText.trim().substring(0, 8000);
+    }
+
+    var n = fileText.replace(/\s/g, '').length;
+    if (n > 100) {
+      tag.innerHTML = '<span class="file-ok"> ' + file.name + ' &nbsp;-&nbsp; ' + n + ' caracters extrets</span>';
+    } else {
+      tag.innerHTML = '<span class="file-err">(!) Poc text extret de ' + file.name + '. Prova amb .txt</span>';
+    }
+  } catch(e) {
+    fileText = '';
+    tag.innerHTML = '<span class="file-err">(!) Error llegint el fitxer: ' + e.message + '</span>';
+  }
+}
+
+function renderTabs() {
+  var tabsRow = document.getElementById('tabsRow');
+  var panelsWrap = document.getElementById('panelsWrap');
+  tabsRow.innerHTML = TABS.map(function(t) {
+    return '<button class="tab' + (activeTab === t.id ? ' on' : '') + '" onclick="switchTab(\'' + t.id + '\')">' + t.label + '</button>';
+  }).join('');
+  panelsWrap.innerHTML = TABS.map(function(t) {
+    return '<div class="panel' + (activeTab === t.id ? ' on' : '') + '" id="panel-' + t.id + '">' +
+      '<button class="copy-btn" onclick="doCopy(\'' + t.id + '\')">Copiar text</button>' +
+      '<pre id="text-' + t.id + '">' + (results[t.id] || '') + '</pre>' +
+      '</div>';
+  }).join('');
+}
+
+function switchTab(id) {
+  activeTab = id;
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('on'); });
+  document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('on'); });
+  var found = document.querySelectorAll('.tab');
+  for (var i = 0; i < found.length; i++) {
+    if (found[i].textContent === TABS.find(function(x) { return x.id === id; }).label) {
+      found[i].classList.add('on');
+    }
+  }
+  var panel = document.getElementById('panel-' + id);
+  if (panel) panel.classList.add('on');
+}
+
+function doCopy(id) {
+  var text = document.getElementById('text-' + id).textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    var btns = document.querySelectorAll('.copy-btn');
+    btns.forEach(function(b) {
+      if (b.getAttribute('onclick') && b.getAttribute('onclick').indexOf(id) !== -1) {
+        b.textContent = 'Copiat!';
+        setTimeout(function() { b.textContent = 'Copiar text'; }, 2000);
+      }
+    });
+  });
+}
+
+async function callAPI(sys, prompt, onChunk) {
+  var key = getKey();
+  var resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5',
+      max_tokens: 7000,
+      stream: true,
+      system: sys,
+      messages: [{role: 'user', content: prompt}]
+    })
+  });
+  if (!resp.ok) {
+    var e = await resp.json();
+    throw new Error(e.error ? e.error.message : 'Error API ' + resp.status);
+  }
+  var reader = resp.body.getReader();
+  var dec = new TextDecoder();
+  var full = '';
+  while (true) {
+    var res = await reader.read();
+    if (res.done) break;
+    var lines = dec.decode(res.value).split('\n');
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      if (!line.startsWith('data: ')) continue;
+      var d = line.slice(6).trim();
+      if (d === '[DONE]') continue;
+      try {
+        var j = JSON.parse(d);
+        if (j.type === 'content_block_delta' && j.delta && j.delta.text) {
+          full += j.delta.text;
+          if (onChunk) onChunk(full);
+        }
+      } catch(err) {}
+    }
+  }
+  return full;
+}
+
+function parseSections(text) {
+  var tags = ['A','B','C','D','E','F'];
+  var out = {};
+  for (var i = 0; i < tags.length; i++) {
+    var tag = tags[i];
+    var next = tags[i+1];
+    var pattern = '===SECCIO_' + tag + '===([\\s\\S]*?)' + (next ? '===SECCIO_' + next + '===' : '$');
+    var m = text.match(new RegExp(pattern));
+    out[tag.toLowerCase()] = m ? m[1].trim() : '';
+  }
+  return out;
+}
+
+async function runGeneration() {
+  var key = getKey();
+  if (!key || key.indexOf('sk-') !== 0) {
+    alert("Introdueix la clau d'API i clica Desar.");
+    document.getElementById('apiKey').focus();
+    return;
+  }
+  var jobName = document.getElementById('jobName').value.trim();
+  var jobCode = document.getElementById('jobCode').value.trim();
+  var perfil = document.getElementById('perfil').value;
+  if (!jobName) { alert('Introdueix el nom del lloc.'); return; }
+  if (!jobCode) { alert("Introdueix el codi de l'oferta."); return; }
+  if (!perfil) { alert('Selecciona el tipus de perfil.'); return; }
+
+  var btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.textContent = 'Generant pack...';
+  document.getElementById('steps').classList.add('show');
+  document.getElementById('resultBox').classList.add('show');
+  results = {};
+  renderTabs();
+  for (var i = 1; i <= 8; i++) setDot(i, '');
+
+  var docPart = fileText ? '\n\nDOCUMENT DEL LLOC (DPT/ATRI):\n' + fileText.substring(0, 5000) : '';
+  var SYS = "Ets expert en employer branding i seleccio de personal d'ATL (Ens d'Abastament d'Aigua Ter Llobregat), empresa publica de la Generalitat de Catalunya. Generes peces de difusio professionals i llestes per publicar. Usa sempre llenguatge inclusiu. Mai modifiques requisits legals ni canal oficial (www.atl.cat). No inventis salari ni condicions no publicades.\n" + ATL_CONTEXT;
+
+  var PROMPT = 'Genera el pack complet per al lloc "' + jobName + '" (codi: ' + jobCode + ', perfil: ' + perfil + ').' + docPart + '\n\nSepara cada apartat amb el tag exacte indicat:\n\n===SECCIO_A===\nFITXA EXECUTIVA per a Seleccio (format CAMP: valor, una linia per camp): Nom del lloc / Codi / Perfil de difusio / Centre de treball / Canals a activar / Canals NO recomanats (motiu) / Missatge atraccio (1-2 frases) / Requisits critics / Aspectes valorables / CTA: www.atl.cat oferta ' + jobCode + ' / Advertencies juridiques\n\n===SECCIO_B===\nVERSIO ATRI (600-800 paraules): obertura impactant, presentacio ATL, missio, funcions 3 blocs, requisits, valorables, competencies, condicions formals, inscripcio www.atl.cat oferta ' + jobCode + '\n\n===SECCIO_C===\nVERSIO LINKEDIN: titular, post complet, Que faras (llista), Que necessites (llista), CTA www.atl.cat oferta ' + jobCode + ', hashtags, versio breu 100 paraules\n\n===SECCIO_D===\nVERSIO PORTALS (InfoJobs/Indeed/Feina.cat): titol, entradilla, descripcio ATL, rol, funcions, requisits, valorables, condicions, inscripcio www.atl.cat oferta ' + jobCode + ', paraules clau\n\n===SECCIO_E===\nPACK FP 4 peces completes: 1) Email centre FP (assumpte + cos) 2) Text borsa treball 3) Missatge tutor/a 4) Missatge alumnat jove\n\n===SECCIO_F===\nPLA CANALS taula: Canal | Prioritat | Moment | Accio | Indicador. Inclou ATRI, web ATL, LinkedIn, portals, FP, SOC. Al final: CANALS NO ACTIVATS i motiu.';
+
+  try {
+    setDot(1, 'run'); await new Promise(function(r) { setTimeout(r, 100); }); setDot(1, 'ok');
+    for (var n = 2; n <= 7; n++) setDot(n, 'run');
+    renderTabs(); switchTab('a');
+
+    var rawText = await callAPI(SYS, PROMPT, function(raw) {
+      var parsed = parseSections(raw);
+      var keys = Object.keys(parsed);
+      for (var k = 0; k < keys.length; k++) {
+        var key2 = keys[k];
+        if (parsed[key2]) {
+          results[key2] = parsed[key2];
+          var el = document.getElementById('text-' + key2);
+          if (el) el.textContent = parsed[key2];
+        }
+      }
+      if (results.a) setDot(2, 'ok');
+      if (results.b) setDot(3, 'ok');
+      if (results.c) setDot(4, 'ok');
+      if (results.d) setDot(5, 'ok');
+      if (results.e) setDot(6, 'ok');
+      if (results.f) setDot(7, 'ok');
+    });
+
+    results = parseSections(rawText);
+    for (var n2 = 2; n2 <= 7; n2++) setDot(n2, 'ok');
+    renderTabs();
+
+    setDot(8, 'run');
+    buildWord(jobName, jobCode, perfil);
+    setDot(8, 'ok');
+
+    document.getElementById('resultTitle').textContent = 'Pack complet: ' + jobName + ' - ' + jobCode;
+    switchTab('a');
+
+  } catch(err) {
+    console.error(err);
+    document.getElementById('resultTitle').textContent = 'Error: ' + err.message;
+    for (var n3 = 1; n3 <= 8; n3++) {
+      if (document.getElementById('d' + n3).classList.contains('run')) setDot(n3, 'err');
+    }
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Generar pack de difusio i descarregar PDF';
+}
+
+function buildWord(jobName, jobCode, perfil) {
+  var secs = [
+    {l:'A', t:'Fitxa executiva per a Seleccio', k:'a'},
+    {l:'B', t:'Versio ATRI / canal formal', k:'b'},
+    {l:'C', t:'Versio LinkedIn', k:'c'},
+    {l:'D', t:'Versio portals de feina', k:'d'},
+    {l:'E', t:'Pack centres FP / talent jove', k:'e'},
+    {l:'F', t:"Pla tancat d'activacio de canals", k:'f'}
+  ];
+
+  function esc(t) {
+    return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function fmt(text) {
+    if (!text) return '<p>No generat.</p>';
+    var lines = text.split('\n');
+    var html = '';
+    var inList = false;
+    for (var i = 0; i < lines.length; i++) {
+      var l = lines[i].trim();
+      if (!l) { if (inList) { html += '</ul>'; inList = false; } continue; }
+      if (/^#{1,3}\s/.test(l)) {
+        if (inList) { html += '</ul>'; inList = false; }
+        html += '<h3>' + esc(l.replace(/^#+\s*/,'')) + '</h3>';
+      } else if (/^[\u2022\-]\s/.test(l)) {
+        if (!inList) { html += '<ul>'; inList = true; }
+        html += '<li>' + esc(l.replace(/^[\u2022\-]\s*/,'')) + '</li>';
+      } else if (/^\d+\.\s/.test(l)) {
+        if (!inList) { html += '<ul>'; inList = true; }
+        html += '<li>' + esc(l.replace(/^\d+\.\s*/,'')) + '</li>';
+      } else if (/^\*\*(.+)\*\*$/.test(l)) {
+        if (inList) { html += '</ul>'; inList = false; }
+        html += '<h3>' + esc(l.replace(/\*\*/g,'')) + '</h3>';
+      } else {
+        if (inList) { html += '</ul>'; inList = false; }
+        html += '<p>' + esc(l).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>') + '</p>';
+      }
+    }
+    if (inList) html += '</ul>';
+    return html;
+  }
+
+  var secsHtml = secs.map(function(s) {
+    return '<div class="sec">' +
+      '<h1>' + s.l + '.&nbsp;&nbsp;' + esc(s.t) + '</h1>' +
+      fmt(results[s.k]) +
+      '</div>';
+  }).join('');
+
+  var printHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Pack ATL ' + esc(jobCode) + '</title><style>' +
+    '*{box-sizing:border-box;margin:0;padding:0}' +
+    'body{font-family:Arial,sans-serif;font-size:10.5pt;line-height:1.5;color:#000;padding:0}' +
+    'h1{font-size:14pt;color:#0F6E56;border-bottom:2px solid #0F6E56;padding-bottom:4px;margin-bottom:10px}' +
+    'h3{font-size:11pt;font-weight:bold;margin:10px 0 4px}' +
+    'p{margin:2px 0}' +
+    'ul{margin:4px 0 4px 20px;padding:0}' +
+    'li{margin:1px 0}' +
+    'strong{font-weight:bold}' +
+    '.cover{text-align:center;padding:80px 40px;page-break-after:always}' +
+    '.cover-label{color:#0F6E56;font-size:12pt;margin-bottom:12px}' +
+    '.cover-title{font-size:22pt;font-weight:bold;margin-bottom:10px}' +
+    '.cover-code{font-size:15pt;color:#0F6E56;margin-bottom:8px}' +
+    '.cover-perfil{color:#666;margin-bottom:4px}' +
+    '.cover-atl{color:#0F6E56;font-weight:bold;margin-top:30px;padding-top:10px;border-top:2px solid #0F6E56;display:inline-block}' +
+    '.sec{page-break-before:always;padding:20px 0 0}' +
+    '@media print{' +
+      'body{padding:0}' +
+      '.sec{page-break-before:always}' +
+      '.cover{page-break-after:always}' +
+    '}' +
+    '</style></head><body>' +
+    '<div class="cover">' +
+      '<div class="cover-label">Pack complet de difusio d\'oferta ATL</div>' +
+      '<div class="cover-title">' + esc(jobName) + '</div>' +
+      '<div class="cover-code">' + esc(jobCode) + '</div>' +
+      '<div class="cover-perfil">Perfil: ' + esc(perfil) + '</div>' +
+      '<div class="cover-perfil">Document preparat per a l\'area de Seleccio d\'ATL</div>' +
+      '<div class="cover-atl">ATL - Ens d\'Abastament d\'Aigua Ter Llobregat</div>' +
+    '</div>' +
+    secsHtml +
+    '</body></html>';
+
+  // Open in new window and trigger print to PDF
+  var win = window.open('', '_blank');
+  win.document.write(printHtml);
+  win.document.close();
+  win.focus();
+  setTimeout(function() {
+    win.print();
+  }, 800);
+
+  var a = document.getElementById('dlBtn');
+  a.className = 'dl-btn';
+  a.textContent = 'Imprimir / Desar PDF';
+  a.onclick = function() { win.print(); return false; };
+}
+</script>

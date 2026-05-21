@@ -1,2 +1,0 @@
-# atl-seleccio
-Selecció ATL
